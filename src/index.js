@@ -48,17 +48,23 @@ const createParameterizeFunction (route) {
 };
 
 const parameterizeFunctions = new WeakMap();
+const applyParameterizer = function (req) {
+    let parameterize = parameterizeFunctions.get(req.route);
+
+    if (parameterize == null) {
+        parameterize = createParameterizeFunction(req.route);
+        parameterizeFunctions.set(req.route, parameterize);
+    }
+
+    parameterize(req);
+};
+
 module.exports = {
     name: "query-parameter-parser",
     respondsTo: "then",
     callback: (req, res) => {
-        let parameterize = parameterizeFunctions.get(req.route);
-
-        if (parameterize == null) {
-            parameterize = createParameterizeFunction(req.route);
-            parameterizeFunctions.set(req.route, parameterize);
-        }
-
-        parameterize(req);
+        applyParameterizer(req);
     },
+
+    applyParameterizer,
 };
